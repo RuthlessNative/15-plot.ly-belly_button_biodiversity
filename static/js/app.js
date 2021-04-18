@@ -1,5 +1,5 @@
 //Initiliaize collection of belly button IDs into dropdown and create event listeners
-function init(){
+function init() {
     //Use d3 to create an event handler of the drop down
     var dropDown = d3.select("#selDataset");
 
@@ -19,7 +19,7 @@ function init(){
         //Build the plot with the selected data
 
         //Add event listener for drop down
-        dropDown.on("change",metaData); //metaData function below
+        dropDown.on("change", metaData); //metaData function below
     });
 };
 
@@ -31,9 +31,14 @@ function metaData(){
 
     //console.log(dropDown);
 
-    //Create a custom filtering function
+    //Create a custom filtering function for metadata.id
     function dataFilter(metaData) {
         return metaData.id == dropDown
+    };
+
+    //Create a custom filtering function for samples.id
+    function dataFilteredsamplesID(samples) {
+        return samples.id == dropDown
     };
 
     //Fetch the JSON data
@@ -47,6 +52,49 @@ function metaData(){
         var dataFiltered = dataFiltered[0];
 
         console.log(dataFiltered);
+
+        //console.log(data.samples)
+        var samples = data.samples;
+
+        var samplesID = samples.filter(dataFilteredsamplesID);
+
+        // Use indexing to access an array item
+        var samplesID = samplesID[0];
+
+        //console.log(samplesID);
+
+        otu_ids = samplesID.otu_ids;
+        sampleValues = samplesID.sample_values;
+
+        //console.log(otu_ids)
+
+        // Slice the first 10 objects for plotting
+        slicedData_otu = otu_ids.slice(0, 10);
+        slicedData_otu = slicedData_otu.map(otu => "OTU " + otu + " ");
+        slicedData_otu = slicedData_otu.reverse();
+
+        console.log(slicedData_otu);
+
+        // Slice the first 10 objects for plotting
+        slicedData_values = sampleValues.slice(0, 10);
+        slicedData_values = slicedData_values.reverse();
+
+        console.log(slicedData_values);
+
+        var trace1 = {
+            x: slicedData_values,
+            y: slicedData_otu,
+            type: "bar",
+            orientation: "h"
+          };
+        
+          var data = [trace1];
+        
+          var layout = {
+            title: "Top 10 OTUs"
+          };
+        
+          Plotly.newPlot("bar", data, layout);
 
         // //Clears the table of the original data & appends relative selected data
         // Select the html tag where the data is being placed into
@@ -85,19 +133,6 @@ function metaData(){
     
 
 
-    // var trace1 = {
-    //     x: ["beer", "wine", "martini", "margarita",
-    //       "ice tea", "rum & coke", "mai tai", "gin & tonic"],
-    //     y: [22.7, 17.1, 9.9, 8.7, 7.2, 6.1, 6.0, 4.6],
-    //     type: "bar"
-    //   };
-      
-    //   var data = [trace1];
-      
-    //   var layout = {
-    //     title: "'Bar' Chart"
-    //   };
-      
-    //   Plotly.newPlot("plot", data, layout);
+    
 
 };
