@@ -1,4 +1,4 @@
-//Initiliaize collection of belly button IDs into dropdown and create event listeners
+//Initiliaize collection of belly button IDs into dropdown and create event listener
 function init() {
     //Use d3 to create an event handler of the drop down
     var dropDown = d3.select("#selDataset");
@@ -6,17 +6,12 @@ function init() {
     //Fetch the JSON data
     d3.json("data/samples.json").then((data) => {
 
-        //Append all IDs to the drop down
+        //Append all IDs (data.names) to the drop down
         var names = data.names;
         names.forEach((id) => {
             dropDown.append("option")
             .text(id);
         });
-
-        //Promise pending
-        //const dataPromise = names[0];
-
-        //Build the plot with the selected data
 
         //Add event listener for drop down
         dropDown.on("change", metaData); //metaData function below
@@ -25,18 +20,20 @@ function init() {
 
 init();
 
+// // metaData 
+
 function metaData(){
     //Use d3 to create an event handler of the drop down
     var dropDown = d3.select("#selDataset").property("value");
 
     //console.log(dropDown);
 
-    //Create a custom filtering function for metadata.id
+    //Create a custom filtering function for metadata.id (from samples.json data file)
     function dataFilter(metaData) {
         return metaData.id == dropDown
     };
 
-    //Create a custom filtering function for samples.id
+    //Create a custom filtering function for samples.id (from samples.json data file)
     function dataFilteredsamplesID(samples) {
         return samples.id == dropDown
     };
@@ -44,42 +41,52 @@ function metaData(){
     //Fetch the JSON data
     d3.json("data/samples.json").then((data) => {
         
+        // Save the metadata in data as a variable
         var metaData = data.metadata;
-
+        // Use filter to produce an array item of 1 object filtered by the dataFilter function
         var dataFiltered = metaData.filter(dataFilter);
-
-        // Use indexing to access an array item
+        // Use indexing to access the 1 object in the array item
         var dataFiltered = dataFiltered[0];
 
-        console.log(dataFiltered);
+        //console.log(dataFiltered);
 
-        //console.log(data.samples)
+        // Save the samples in data as a variable
         var samples = data.samples;
-
+        // Use filter to produce an array item of 1 object filtered by the dataFilteredsamplesID function
         var samplesID = samples.filter(dataFilteredsamplesID);
-
-        // Use indexing to access an array item
+        //console.log(samplesID);
+        // Use indexing to access the 1 object in the array item
         var samplesID = samplesID[0];
 
         //console.log(samplesID);
 
-        otu_ids = samplesID.otu_ids;
-        sampleValues = samplesID.sample_values;
+        // Pull out arrays and save them as variables
+        var otu_ids = samplesID.otu_ids;
+        var otu_labels = samplesID.otu_labels;
+        var sampleValues = samplesID.sample_values;
 
         //console.log(otu_ids)
 
-        // Slice the first 10 objects for plotting
+        // // Prepare data for plotting
+
+        // Slice the first 10 objects in the otu_ids array for plotting
         slicedData_otu = otu_ids.slice(0, 10);
-        slicedData_otu = slicedData_otu.map(otu => "OTU " + otu + " ");
+        // Reverse the order of the list
         slicedData_otu = slicedData_otu.reverse();
+        // Use map to create an array of texts to use in the y axis of the h-bar chart
+        slicedData_otu = slicedData_otu.map(otu => "OTU " + otu + " ");        
 
-        console.log(slicedData_otu);
+        //console.log(slicedData_otu);
 
-        // Slice the first 10 objects for plotting
+        // Slice the first 10 objects in the sampleValues array for plotting
         slicedData_values = sampleValues.slice(0, 10);
         slicedData_values = slicedData_values.reverse();
 
-        console.log(slicedData_values);
+        //console.log(slicedData_values);
+
+        // // Plot Charts
+        
+        // // Horizontal Bar Chart
 
         var trace1 = {
             x: slicedData_values,
@@ -88,22 +95,46 @@ function metaData(){
             orientation: "h"
           };
         
-          var data = [trace1];
-        
-          var layout = {
-            title: "Top 10 OTUs"
-          };
-        
-          Plotly.newPlot("bar", data, layout);
+        var data = [trace1];
+    
+        var layout = {
+        title: "Top 10 OTUs present in Sample ID"
+        };
+    
+        Plotly.newPlot("bar", data, layout);
 
-        // //Clears the table of the original data & appends relative selected data
-        // Select the html tag where the data is being placed into
-        panelBody = d3.select(".panel-body");    
+        // // Bubble Chart
+        // // https://plotly.com/javascript/bubble-charts/
+
+        var trace1 = {
+            x: otu_ids,
+            y: sampleValues,
+            mode: 'markers',
+            marker: {
+              color: otu_ids,
+              size: sampleValues
+            },
+            text: otu_labels
+          };
+          
+        var data = [trace1];
+          
+        var layout = {
+            title: "Operational Taxonomic Unit (OTU) ID",
+            showlegend: false
+        };
+          
+        Plotly.newPlot("bubble", data, layout);
+
+        // // Demographic Info Panel
+
+        // Clears the table of the original data & appends relative selected data
+        panelBody = d3.select(".panel-body");   // Select the html tag where the data is being placed into
 
         // Clear the info withinin the selected panel-body HTML tag
         panelBody.html("");
-        //Appends data
         
+        //Appends data to panel
         panelBody.append("h5").text("ID: " + dataFiltered.id);
         panelBody.append("h5").text("Ethnicity: " + dataFiltered.ethnicity);
         panelBody.append("h5").text("Gender: " + dataFiltered.gender);
@@ -112,27 +143,4 @@ function metaData(){
         panelBody.append("h5").text("Blood Type: " + dataFiltered.bbtype);
         panelBody.append("h5").text("Washing Freq: " + dataFiltered.wfreq);
     });
-
-    // // //
-
-    // //Fetch the JSON data
-    // d3.json("data/samples.json").then((data) => {
-        
-    //     var samples = data.samples;
-    
-    //     var dataFiltered = samples.filter(xxx);
-    
-    //     // Use indexing to access an array item
-    //     var dataFiltered = dataFiltered[0];
-    
-    //     console.log(dataFiltered);
-    
-    //     // //Clears the table of the original data & appends relative selected data
-    //     // Select the html tag where the data is being placed into
-    //     panelBody = d3.select(".panel-body");    
-    
-
-
-    
-
 };
